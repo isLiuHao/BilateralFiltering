@@ -119,7 +119,6 @@ if __name__ == '__main__':
     # 图像地址
     image_Path = "1_20.jpg"
     Origin_image = Image.open(image_Path)
-    file = image_Path[0:image_Path.index('.')]
     # 原图
     plt.figure(figsize=(18, 12))
     plt.subplot(2, 2, 1)
@@ -134,7 +133,7 @@ if __name__ == '__main__':
         start_time = time.time()
         bf = BilateralFilter(int(s_sigma), int(v_sigma), int(radius))
         dest = bf.bilateral_filter(Origin_image)
-        dest.save(file + '_out_' + str(i) + '.jpg')
+        dest.save('BF' + str(i) + '_'+ image_Path)
         end_time = time.time()
         timex = str(end_time - start_time)
 
