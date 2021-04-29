@@ -116,48 +116,30 @@ class BilateralFilter(object):
         return out_data
 
 if __name__ == '__main__':
-    flag = 1
-    while flag == 1:
-        image_path = input("输入滤波的图片路径：")
-        image = str(image_path)
-        img0 = Image.open(image)
-        file = image[0:image.index('.')]
+    # 图像地址
+    image_Path = "1_20.jpg"
+    Origin_image = Image.open(image_Path)
+    file = image_Path[0:image_Path.index('.')]
+    # 原图
+    plt.figure(figsize=(18, 12))
+    plt.subplot(2, 2, 1)
+    plt.title("Origin", fontsize=20)
+    plt.imshow(Origin_image)
+    plt.axis('off')
+    # 不同参数对比
+    for i in range(2,5):
+        radius = input("模块半径设置为：")
+        s_sigma = input("空间域sigma设置为：")
+        v_sigma = input("值域sigma设置为：")
+        start_time = time.time()
+        bf = BilateralFilter(int(s_sigma), int(v_sigma), int(radius))
+        dest = bf.bilateral_filter(Origin_image)
+        dest.save(file + '_out_' + str(i) + '.jpg')
+        end_time = time.time()
+        timex = str(end_time - start_time)
 
-        flag1 = 1
-        count = 1
-        plt.figure(figsize=(18, 12))
-        plt.subplot(2, 2, 1)
-        plt.title("Origin", fontsize=20)
-        plt.imshow(img0)
+        plt.subplot(2, 2, i)
+        plt.title('s_sigma=' + s_sigma + ',v_sigma=' + v_sigma + ',r=' + radius + ',time=' + timex[0:5], fontsize=20)
+        plt.imshow(dest)
         plt.axis('off')
-        while flag1 == 1 and count < 4:
-            ds = input("请输入空间域sigma：")
-            rs = input("请输入值域sigma：")
-            radius = input("请输入模块半径：")
-            tim1 = time.time()
-            bf = BilateralFilter(int(ds), int(rs), int(radius))
-            dest = bf.bilateral_filter(img0)
-            dest.save(file + '_out_' + str(count) + '.jpg')
-            tim2 = time.time() - tim1
-            ti = str(tim2)
-            count += 1
-            plt.subplot(2, 2, count)
-            plt.title('d=' + ds + ',r=' + rs + ',m=' + radius + 'time=' + ti[0:5], fontsize=20)
-            plt.imshow(dest)
-            plt.axis('off')
-            ans = input("是否继续输入不同sigma值(y/n)：")
-            if ans == 'y' or ans == 'Y':
-                flag1 = 1
-            else:
-                flag1 = 0
-                count = 1
-
-        ans = input("是否显示不同距离的对比图(y/n)：")
-        if ans == 'y' or ans == 'Y':
-            plt.show()
-
-        ans = input("是否继续选择图片滤波(y/n)：")
-        if ans == 'y' or ans == 'Y':
-            flag = 1
-        else:
-            flag = 0
+    plt.show()
