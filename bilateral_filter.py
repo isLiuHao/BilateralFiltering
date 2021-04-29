@@ -120,10 +120,10 @@ def main():
     try:
         flag = 1
         while flag == 1:
-            image_path = input("请输入需要滤波的图片路径：")
+            image_path = input("输入滤波的图片路径：")
             image = str(image_path)
             img0 = Image.open(image)
-            fil = image[0:image.index('.')]
+            file = image[0:image.index('.')]
 
             flag1 = 1
             count = 1
@@ -139,7 +139,7 @@ def main():
                 tim1 = time.time()
                 bf = BilateralFilter(int(ds), int(rs), int(radius))
                 dest = bf.bilateral_filter(img0)
-                dest.save(fil + '_out_' + str(count) + '.jpg')
+                dest.save(file + '_out_' + str(count) + '.jpg')
                 tim2 = time.time() - tim1
                 ti = str(tim2)
                 count += 1
