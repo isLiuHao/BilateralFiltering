@@ -115,59 +115,49 @@ class BilateralFilter(object):
                 cs_sum_red_weight = cs_sum_blue_weight = cs_sum_green_weight = 0
         return out_data
 
-
-def main():
-    try:
-        flag = 1
-        while flag == 1:
-            image_path = input("输入滤波的图片路径：")
-            image = str(image_path)
-            img0 = Image.open(image)
-            file = image[0:image.index('.')]
-
-            flag1 = 1
-            count = 1
-            plt.figure(figsize=(18, 12))
-            plt.subplot(2, 2, 1)
-            plt.title("Origin", fontsize=20)
-            plt.imshow(img0)
-            plt.axis('off')
-            while flag1 == 1 and count < 4:
-                ds = input("请输入空间域sigma：")
-                rs = input("请输入值域sigma：")
-                radius = input("请输入模块半径：")
-                tim1 = time.time()
-                bf = BilateralFilter(int(ds), int(rs), int(radius))
-                dest = bf.bilateral_filter(img0)
-                dest.save(file + '_out_' + str(count) + '.jpg')
-                tim2 = time.time() - tim1
-                ti = str(tim2)
-                count += 1
-                plt.subplot(2, 2, count)
-                plt.title('d=' + ds + ',r=' + rs + ',m=' + radius + 'time=' + ti[0:5], fontsize=20)
-                plt.imshow(dest)
-                plt.axis('off')
-                ans = input("是否继续输入不同sigma值(y/n)：")
-                if ans == 'y' or ans == 'Y':
-                    flag1 = 1
-
-                else:
-                    flag1 = 0
-                    count = 1
-
-            ans = input("是否显示不同距离的对比图(y/n)：")
-            if ans == 'y' or ans == 'Y':
-                plt.show()
-
-            ans = input("是否继续选择图片滤波(y/n)：")
-            if ans == 'y' or ans == 'Y':
-                flag = 1
-            else:
-                flag = 0
-
-    except IOError:
-        print("该路径找不到图像文件")
-
-
 if __name__ == '__main__':
-    main()
+    flag = 1
+    while flag == 1:
+        image_path = input("输入滤波的图片路径：")
+        image = str(image_path)
+        img0 = Image.open(image)
+        file = image[0:image.index('.')]
+
+        flag1 = 1
+        count = 1
+        plt.figure(figsize=(18, 12))
+        plt.subplot(2, 2, 1)
+        plt.title("Origin", fontsize=20)
+        plt.imshow(img0)
+        plt.axis('off')
+        while flag1 == 1 and count < 4:
+            ds = input("请输入空间域sigma：")
+            rs = input("请输入值域sigma：")
+            radius = input("请输入模块半径：")
+            tim1 = time.time()
+            bf = BilateralFilter(int(ds), int(rs), int(radius))
+            dest = bf.bilateral_filter(img0)
+            dest.save(file + '_out_' + str(count) + '.jpg')
+            tim2 = time.time() - tim1
+            ti = str(tim2)
+            count += 1
+            plt.subplot(2, 2, count)
+            plt.title('d=' + ds + ',r=' + rs + ',m=' + radius + 'time=' + ti[0:5], fontsize=20)
+            plt.imshow(dest)
+            plt.axis('off')
+            ans = input("是否继续输入不同sigma值(y/n)：")
+            if ans == 'y' or ans == 'Y':
+                flag1 = 1
+            else:
+                flag1 = 0
+                count = 1
+
+        ans = input("是否显示不同距离的对比图(y/n)：")
+        if ans == 'y' or ans == 'Y':
+            plt.show()
+
+        ans = input("是否继续选择图片滤波(y/n)：")
+        if ans == 'y' or ans == 'Y':
+            flag = 1
+        else:
+            flag = 0
