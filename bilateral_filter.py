@@ -10,94 +10,90 @@ class bilateral_filter(object):
     def __init__(self, s_sigma, v_sigma, radius):
         self.s_sigma = s_sigma          # 空间域sigma
         self.v_sigma = v_sigma          # 值域sigma
-        self.s_weight_table = []        # 定义域核
-        self.v_weight_table = []        # 值域核
-        self.radius = radius            # 模块半径，即模块大小为（2*radius+1）
+        self.s_weight = []              # 定义域权重
+        self.v_weight = []              # 值域权重
+        self.radius = radius            # 滤波邻域半径
 
-    # 定义空间域核
-    def build_space_weight(self):
-        #        size = 2 * self.radius + 1
-        for semi_row in range(-self.radius, self.radius + 1):
-            self.s_weight_table.append([])
-            for semi_col in range(-self.radius, self.radius + 1):
-                # calculate Euclidean distance between center point and close pixels
-                delta = -(semi_row * semi_row + semi_col * semi_col) / (2 * (self.s_sigma ** 2))
-                self.s_weight_table[semi_row + self.radius].append(
-                    math.exp(delta))
-
-    # 定义值域核
-    def build_value_weight(self):
-        for i in range(256):  # since the color scope is 0 ~ 255
-            delta = -(i * i) / (2 * (self.v_sigma ** 2))
-            self.v_weight_table.append(math.exp(delta))
-
-    def clamp(self, p):
-        """return RGB color between 0 and 255"""
-        if p < 0:
+    # 通道为0-255
+    @staticmethod
+    def RGB(pixel):
+        if pixel < 0:
             return 0
-        elif p > 255:
+        elif pixel > 255:
             return 255
         else:
-            return p
+            return pixel
 
-    def start_filter(self, src):
-        """
-        双边滤波器的方法：对原始图进行双边滤波，并返回滤波过后的图
-        """
-        height = src.size[0]
-        width = src.size[1]
+    # 定义空间域权重
+    def build_space_weight(self):
+        for minor_row in range(-self.radius, self.radius + 1):
+            self.s_weight.append([])
+            for minor_col in range(-self.radius, self.radius + 1):
+                delta = -(minor_row * minor_row + minor_col * minor_col) / (2 * (self.s_sigma ** 2))
+                self.s_weight[minor_row + self.radius].append(math.exp(delta))
+
+    # 定义值域权重
+    def build_value_weight(self):
+        for i in range(256):
+            delta = -(i * i) / (2 * (self.v_sigma ** 2))
+            self.v_weight.append(math.exp(delta))
+
+    # 双边滤波算法
+    def start_filter(self, image):
+        height = image.size[0]
+        width = image.size[1]
         radius = self.radius
         self.build_space_weight()
         self.build_value_weight()
-        in_pixels = src.load()
+        pixels = image.load()
         raw_data = []
-        out_data = copy.deepcopy(src)
+        out_data = copy.deepcopy(image)
         red_sum = green_sum = blue_sum = 0
         cs_sum_red_weight = cs_sum_green_weight = cs_sum_blue_weight = 0
         # 边缘像素不滤波
         for row in range(radius, height - radius):
             for col in range(radius, width - radius):
                 # 对每个像素进行滤波
-                tr = in_pixels[row, col][0]
-                tg = in_pixels[row, col][1]
-                tb = in_pixels[row, col][2]
-                raw_data.append((tr, tg, tb))
-                for semi_row in range(-radius, radius + 1):
-                    for semi_col in range(-radius, radius + 1):
+                pixelR = pixels[row, col][0]
+                pixelG = pixels[row, col][1]
+                pixelB = pixels[row, col][2]
+                raw_data.append((pixelR, pixelG, pixelB))
+                for minor_row in range(-radius, radius + 1):
+                    for minor_col in range(-radius, radius + 1):
                         # 获得模块内的像素
-                        row_offset = row + semi_row
-                        col_offset = col + semi_col
-                        tr2 = in_pixels[row_offset, col_offset][0]
-                        tg2 = in_pixels[row_offset, col_offset][1]
-                        tb2 = in_pixels[row_offset, col_offset][2]
+                        row_offset = row + minor_row
+                        col_offset = col + minor_col
+                        pixelR2 = pixels[row_offset, col_offset][0]
+                        pixelG2 = pixels[row_offset, col_offset][1]
+                        pixelB2 = pixels[row_offset, col_offset][2]
                         # 卷积计算
                         cs_red_weight = (
-                                self.s_weight_table[semi_row + radius][semi_col + radius]
-                                * self.v_weight_table[(abs(tr2 - tr))]
+                                self.s_weight[minor_row + radius][minor_col + radius]
+                                * self.v_weight[(abs(pixelR2 - pixelR))]
                         )
                         cs_green_weight = (
-                                self.s_weight_table[semi_row + radius][semi_col + radius]
-                                * self.v_weight_table[(abs(tg2 - tg))]
+                                self.s_weight[minor_row + radius][minor_col + radius]
+                                * self.v_weight[(abs(pixelG2 - pixelG))]
                         )
                         cs_blue_weight = (
-                                self.s_weight_table[semi_row + radius][semi_col + radius]
-                                * self.v_weight_table[(abs(tb2 - tb))]
+                                self.s_weight[minor_row + radius][minor_col + radius]
+                                * self.v_weight[(abs(pixelB2 - pixelB))]
                         )
 
                         cs_sum_red_weight += cs_red_weight
                         cs_sum_blue_weight += cs_blue_weight
                         cs_sum_green_weight += cs_green_weight
 
-                        red_sum += cs_red_weight * float(tr2)
-                        green_sum += cs_green_weight * float(tg2)
-                        blue_sum += cs_blue_weight * float(tb2)
+                        red_sum += cs_red_weight * float(pixelR2)
+                        green_sum += cs_green_weight * float(pixelG2)
+                        blue_sum += cs_blue_weight * float(pixelB2)
 
                 # 归一化过程
-                tr = int(math.floor(red_sum / cs_sum_red_weight))
-                tg = int(math.floor(green_sum / cs_sum_green_weight))
-                tb = int(math.floor(blue_sum / cs_sum_blue_weight))
+                pixelR = int(math.floor(red_sum / cs_sum_red_weight))
+                pixelG = int(math.floor(green_sum / cs_sum_green_weight))
+                pixelB = int(math.floor(blue_sum / cs_sum_blue_weight))
 
-                temp_rgb = (self.clamp(tr), self.clamp(tg), self.clamp(tb))
+                temp_rgb = (self.RGB(pixelR), self.RGB(pixelG), self.RGB(pixelB))
                 out_data.putpixel((row, col), temp_rgb)
 
                 red_sum = green_sum = blue_sum = 0
@@ -117,7 +113,7 @@ if __name__ == '__main__':
     plt.axis('off')
     # 不同参数对比
     for i in range(2,5):
-        radius = input("模块半径设置为：")
+        radius = input("滤波邻域半径设置为：")
         s_sigma = input("空间域sigma设置为：")
         v_sigma = input("值域sigma设置为：")
         print('双边滤波正在处理........')
